@@ -1,0 +1,3 @@
+CREATE AGGREGATE FUNCTION udf_medain RETURNS REAL SONAME 'udf_stats.so';
+CREATE AGGREGATE FUNCTION udf_median_sorted RETURNS REAL SONAME 'udf_stats.so';
+CREATE AGGREGATE FUNCTION udf_quantile_sorted RETURNS REAL SONAME 'udf_stats.so';
