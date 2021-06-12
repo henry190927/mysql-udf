@@ -20,7 +20,7 @@
 
 using namespace std;
 
-#define DECIMALS 2
+#define DECIMALS 6
 
 extern "C" {
   bool stats_weight_avg_init( UDF_INIT* initid, UDF_ARGS* args, char* message );
@@ -79,8 +79,6 @@ void stats_weight_avg_clear( UDF_INIT* initid, UDF_ARGS* args, char* is_null, ch
   buffer->count = 0;
   buffer->data_sum = 0;
   buffer->weight_sum = 0;
-  *is_null = 0;
-  *error = 0;
 }
 
 void stats_weight_avg_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error )
@@ -104,11 +102,10 @@ double stats_weight_avg( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* 
 {
   weight_avg_data* buffer = (weight_avg_data*) initid->ptr;
 
-  if (buffer->count == 0 || buffer->weight_sum == 0 || *error !=0) {
-    *is_null = 1;
+  if (buffer->count == 0 || buffer->weight_sum == 0 ) {
+
     return 0.0;
   }
 
-  *is_null = 0;
   return (double) buffer->data_sum / buffer->weight_sum;
 }

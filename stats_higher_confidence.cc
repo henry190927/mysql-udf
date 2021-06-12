@@ -4,12 +4,10 @@
  *    Return the higher confidence x-value given data mean, size, sd and confidence level
  *
  * Usage:
- *   HIGHER_CONFIDENCE(probability, size, mean, sd)
+ *   HIGHER_CONFIDENCE(X, probability)
  * 
- *   args[0]: confidence probability / level (int or real)
- *   args[1]: sample size (int)
- *   args[2]: arithmetic mean (int or real)
- *   args[3]: standard deviation (int or real)
+ *   args[0]: input data
+ *   args[1]: confidence probability / level (int or real)
  *
  * Return:
  *   higher confidence x-value : double (REAL)
@@ -21,54 +19,81 @@
 #include <string.h>
 
 #include <mysql.h>
+#include <vector>
+#include <gsl/gsl_statistics.h>
 #include "cmath"
 
 using namespace std;
 
-#define DECIMALS 2
+#define DECIMALS 6
 
 extern "C" {
   bool stats_higher_confidence_init( UDF_INIT* initid, UDF_ARGS* args, char* message );
+  void stats_higher_confidence_deinit( UDF_INIT* initid );
+  void stats_higher_confidence_clear( UDF_INIT* initid, char* is_null, char* error );
+  void stats_higher_confidence_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error );
+  void stats_higher_confidence_add( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error );
   double stats_higher_confidence( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error );
 }
 
+struct stats_confidence_data {
+  vector<double> data;
+};
+
 bool stats_higher_confidence_init( UDF_INIT* initid, UDF_ARGS* args, char* message )
 {
-  if(args->arg_count != 4) {
+  if(args->arg_count != 2) {
     strcpy(message, "Wrong number of arguments: STATS_HIGHER_CONFIDENCE() requires four arguments");
     return 1;
-  } 
+  }
 
-  if(args->arg_type[0] != INT_RESULT && args->arg_type[0] != REAL_RESULT) {
+  if(args->arg_type[0] != REAL_RESULT) {
+    args->arg_type[0] = REAL_RESULT;
+  }
+
+  if(args->arg_type[1] != INT_RESULT && args->arg_type[0] != REAL_RESULT) {
     strcpy(message, "Wrong type of arguments: STATS_HIGHER_CONFIDENCE() requires an integer or a real number as parameter 1");
-    return 1;
-  }
-
-  if(args->arg_type[1] != INT_RESULT) {
-    strcpy(message, "Wrong type of arguments: STATS_HIGHER_CONFIDENCE() requires an interger as parameter 2");
-    return 1;
-  }
-
-  if(*((long*)args->args[1]) < 1) {
-    strcpy(message, "Wrong value of arguments: STATS_HIGHER_CONFIDENCE() requires parameter 2 (sample size) at least 1");
-    return 1;
-  }
-
-  if(args->arg_type[2] != INT_RESULT && args->arg_type[2] != REAL_RESULT) {
-    strcpy(message, "Wrong type of arguments: STATS_HIGHER_CONFIDENCE() requires an integer or a real number as parameter 3");
-    return 1;
-  }
-
-  if(args->arg_type[3] != INT_RESULT && args->arg_type[3] != REAL_RESULT) {
-    strcpy(message, "Wrong type of arguments: STATS_HIGHER_CONFIDENCE() requires an integer or a real number as parameter 4");
     return 1;
   }
 
   initid->decimals = DECIMALS;
   initid->maybe_null    = 0; 
   initid->max_length    = 20;
+
+  stats_confidence_data* buffer = new stats_confidence_data;
+  buffer->data.clear();
+  initid->ptr = (char*) buffer;
   
   return 0;
+}
+
+void stats_higher_confidence_deinit( UDF_INIT* initid )
+{
+  stats_confidence_data* buffer = (stats_confidence_data*) initid->ptr;
+
+  delete buffer;
+}
+
+void stats_higher_confidence_clear( UDF_INIT* initid, char* is_null, char* error )
+{
+  stats_confidence_data* buffer = (stats_confidence_data*) initid->ptr;
+
+  buffer->data.clear();
+}
+
+void stats_higher_confidence_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error )
+{
+  stats_higher_confidence_clear( initid, is_null, error );
+  stats_higher_confidence_add( initid, args, is_null, error );
+}
+
+void stats_higher_confidence_add( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error )
+{
+  stats_confidence_data* buffer = (stats_confidence_data*) initid->ptr;
+
+  if (args->args[0] != NULL) {
+    buffer->data.push_back(*(double*)args->args[0]);
+  }
 }
 
 static double invnormalp(double prob_high_end)
@@ -121,35 +146,18 @@ double stats_higher_confidence( UDF_INIT* initid, UDF_ARGS* args, char* is_null,
   double std_dev;
   double t_dist;
 
-  if(args->arg_type[0]==INT_RESULT) {
-    conf_prob = (double) *((long long*) args->args[0]);
-  } else if(args->arg_type[0]==REAL_RESULT) {
-    conf_prob = (double) *((double*) args->args[0]);
+  stats_confidence_data* buffer = (stats_confidence_data*) initid->ptr;
+
+  if(args->arg_type[1]==INT_RESULT) {
+    conf_prob = (double) *((long long*) args->args[1]);
+  } else if(args->arg_type[1]==REAL_RESULT) {
+    conf_prob = (double) *((double*) args->args[1]);
   }
 
-  if (args->arg_type[1]==INT_RESULT)
-  {
-    sample_size = (double) *((long long*) args->args[1]);
-  } else if (args->arg_type[1]==REAL_RESULT)
-  {
-    sample_size = (double) *((double*) args->args[1]);
-  }
-
-  if (args->arg_type[2]==INT_RESULT)
-  {
-    mean = (double) *((long long*) args->args[2]);
-  } else if (args->arg_type[2]==REAL_RESULT)
-  {
-    mean = (double) *((double*) args->args[2]);
-  }
-
-  if (args->arg_type[3]==INT_RESULT)
-  {
-    std_dev = (double) *((long long*) args->args[3]);
-  } else if (args->arg_type[3]==REAL_RESULT)
-  {
-    std_dev = (double) *((double*) args->args[3]);
-  }
+  double* values = buffer->data.data();
+  sample_size = buffer->data.size();
+  mean = gsl_stats_mean(values, 1, buffer->data.size());
+  std_dev = gsl_stats_sd(values, 1, buffer->data.size());
 
   double prob_high_end = conf_prob * 0.5 + 0.5;
   t_dist = invnormalp(prob_high_end);

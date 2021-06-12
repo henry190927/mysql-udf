@@ -6,7 +6,7 @@
  *    STATS_QUANTILE_SORTED('X', percentile)
  * 
  *    args[0]: column data
- *    args[1]: percentile f (f in [0, 1])
+ *    args[1]: percentile f (f in [0, 100])
  *
  * Return:
  *    quantile: double (REAL)
@@ -23,7 +23,7 @@
 
 using namespace std;
 
-#define DECIMALS 2
+#define DECIMALS 6
 
 extern "C" {
   bool stats_quantile_sorted_init( UDF_INIT* initid, UDF_ARGS* args, char* message );

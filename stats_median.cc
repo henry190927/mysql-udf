@@ -21,7 +21,7 @@
 
 using namespace std;
 
-#define DECIMALS 2
+#define DECIMALS 6
 
 extern "C" {
   bool stats_median_init( UDF_INIT* initid, UDF_ARGS* args, char* message );
@@ -94,7 +94,8 @@ double stats_median( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* erro
 
   double* values = buffer->data.data();
 
-  double median = gsl_stats_median(values, 1, buffer->data.size());
+  // double median = gsl_stats_median(values, 1, buffer->data.size());
+  double median = buffer->data[buffer->data.size() / 2];
 
   return median;
 }

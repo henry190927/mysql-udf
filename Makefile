@@ -1,9 +1,10 @@
-CC = gcc
+CC = g++
 CFLAGS = -fPIC $(INCL)
 LDFLAGS = -shared
 
 INCL = $(shell mysql_config --include) $(shell gsl-config --cflags) -I/usr/local/mysql/include
 LIBS = $(shell gsl-config --libs)
+PLUGINS = /usr/local/mysql/lib/plugin
 
 TARGET_LIB = stats.so
 
@@ -20,7 +21,7 @@ $(TARGET_LIB): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 install :
-	@cp $(TARGET_LIB) $(shell mysql_config --plugindir)
+	@cp $(TARGET_LIB) $(shell mysql_config --plugindir) $(PLUGINS)
 
 clean :
 	@rm -rf $(TARGET_LIB) $(OBJS)
