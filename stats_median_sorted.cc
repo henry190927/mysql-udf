@@ -1,5 +1,14 @@
-/*
-    
+/* stats_median_sorted function
+ *
+ * Description:
+ *    Calculate the median of (sorted) 'X'
+ * Usage:
+ *    STATS_MEDIAN_SORTED('X')
+ * 
+ *    args[0]: column data
+ *
+ * Return:
+ *    median: double (REAL)
 */
 #include <stdlib.h>
 #include <stdio.h>

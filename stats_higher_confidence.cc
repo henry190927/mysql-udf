@@ -1,11 +1,21 @@
-/*
-  USAGE: 
-    args[0]: confidence probability (int or real)
-    args[1]: sample size (int)
-    args[2]: arithmetic mean (int or real)
-    args[3]: standard deviation (int or real)
-    
+/* stats_higher_conficence function
+ *
+ * Description:
+ *    Return the higher confidence x-value given data mean, size, sd and confidence level
+ *
+ * Usage:
+ *   HIGHER_CONFIDENCE(probability, size, mean, sd)
+ * 
+ *   args[0]: confidence probability / level (int or real)
+ *   args[1]: sample size (int)
+ *   args[2]: arithmetic mean (int or real)
+ *   args[3]: standard deviation (int or real)
+ *
+ * Return:
+ *   higher confidence x-value : double (REAL)
+ *  
 */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -18,39 +28,39 @@ using namespace std;
 #define DECIMALS 2
 
 extern "C" {
-  bool udf_higher_confidence_init( UDF_INIT* initid, UDF_ARGS* args, char* message );
-  double udf_higher_confidence( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error );
+  bool stats_higher_confidence_init( UDF_INIT* initid, UDF_ARGS* args, char* message );
+  double stats_higher_confidence( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error );
 }
 
-bool udf_higher_confidence_init( UDF_INIT* initid, UDF_ARGS* args, char* message )
+bool stats_higher_confidence_init( UDF_INIT* initid, UDF_ARGS* args, char* message )
 {
   if(args->arg_count != 4) {
-    strcpy(message, "Wrong number of arguments: UDF_HIGHER_CONFIDENCE() requires four arguments");
+    strcpy(message, "Wrong number of arguments: STATS_HIGHER_CONFIDENCE() requires four arguments");
     return 1;
   } 
 
   if(args->arg_type[0] != INT_RESULT && args->arg_type[0] != REAL_RESULT) {
-    strcpy(message, "Wrong type of arguments: UDF_HIGHER_CONFIDENCE() requires an integer or a real number as parameter 1");
+    strcpy(message, "Wrong type of arguments: STATS_HIGHER_CONFIDENCE() requires an integer or a real number as parameter 1");
     return 1;
   }
 
   if(args->arg_type[1] != INT_RESULT) {
-    strcpy(message, "Wrong type of arguments: UDF_HIGHER_CONFIDENCE() requires an interger as parameter 2");
+    strcpy(message, "Wrong type of arguments: STATS_HIGHER_CONFIDENCE() requires an interger as parameter 2");
     return 1;
   }
 
   if(*((long*)args->args[1]) < 1) {
-    strcpy(message, "Wrong value of arguments: UDF_HIGHER_CONFIDENCE() requires parameter 2 (sample size) at least 1");
+    strcpy(message, "Wrong value of arguments: STATS_HIGHER_CONFIDENCE() requires parameter 2 (sample size) at least 1");
     return 1;
   }
 
   if(args->arg_type[2] != INT_RESULT && args->arg_type[2] != REAL_RESULT) {
-    strcpy(message, "Wrong type of arguments: UDF_HIGHER_CONFIDENCE() requires an integer or a real number as parameter 3");
+    strcpy(message, "Wrong type of arguments: STATS_HIGHER_CONFIDENCE() requires an integer or a real number as parameter 3");
     return 1;
   }
 
   if(args->arg_type[3] != INT_RESULT && args->arg_type[3] != REAL_RESULT) {
-    strcpy(message, "Wrong type of arguments: UDF_HIGHER_CONFIDENCE() requires an integer or a real number as parameter 4");
+    strcpy(message, "Wrong type of arguments: STATS_HIGHER_CONFIDENCE() requires an integer or a real number as parameter 4");
     return 1;
   }
 
@@ -103,7 +113,7 @@ static double invnormalp(double prob_high_end)
   }
 }
 
-double udf_higher_confidence( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error )
+double stats_higher_confidence( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error )
 {
   double conf_prob;
   double sample_size;
@@ -112,14 +122,14 @@ double udf_higher_confidence( UDF_INIT* initid, UDF_ARGS* args, char* is_null, c
   double t_dist;
 
   if(args->arg_type[0]==INT_RESULT) {
-    conf_prob = (double) *((longlong*) args->args[0]);
+    conf_prob = (double) *((long long*) args->args[0]);
   } else if(args->arg_type[0]==REAL_RESULT) {
     conf_prob = (double) *((double*) args->args[0]);
   }
 
   if (args->arg_type[1]==INT_RESULT)
   {
-    sample_size = (double) *((longlong*) args->args[1]);
+    sample_size = (double) *((long long*) args->args[1]);
   } else if (args->arg_type[1]==REAL_RESULT)
   {
     sample_size = (double) *((double*) args->args[1]);
@@ -127,7 +137,7 @@ double udf_higher_confidence( UDF_INIT* initid, UDF_ARGS* args, char* is_null, c
 
   if (args->arg_type[2]==INT_RESULT)
   {
-    mean = (double) *((longlong*) args->args[2]);
+    mean = (double) *((long long*) args->args[2]);
   } else if (args->arg_type[2]==REAL_RESULT)
   {
     mean = (double) *((double*) args->args[2]);
@@ -135,7 +145,7 @@ double udf_higher_confidence( UDF_INIT* initid, UDF_ARGS* args, char* is_null, c
 
   if (args->arg_type[3]==INT_RESULT)
   {
-    std_dev = (double) *((longlong*) args->args[3]);
+    std_dev = (double) *((long long*) args->args[3]);
   } else if (args->arg_type[3]==REAL_RESULT)
   {
     std_dev = (double) *((double*) args->args[3]);

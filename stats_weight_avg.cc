@@ -1,11 +1,15 @@
-/*
-  return the weighted average of values
-
-  USAGE: 
-    args[0]: data (real)
-    args[1]: weight (real)
-
-    output: weighted of the values (real)
+/* stats_weight_avg function
+ *
+ * Description:
+ *    Calculate the weighted average of 'X' with respective weights
+ * Usage:
+ *    STATS_MEDIAN('X', weight)
+ * 
+ *    args[0]: column data
+ *    args[1]: corresponding weight (real)
+ *
+ * Return:
+ *    weighted average: double (REAL)
 */
 #include <stdlib.h>
 #include <stdio.h>
@@ -19,12 +23,12 @@ using namespace std;
 #define DECIMALS 2
 
 extern "C" {
-  bool udf_weight_avg_init( UDF_INIT* initid, UDF_ARGS* args, char* message );
-  void udf_weight_avg_deinit( UDF_INIT* initid );
-  void udf_weight_avg_clear( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error );
-  void udf_weight_avg_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error );
-  void udf_weight_avg_add( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error );
-  double udf_weight_avg( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error );
+  bool stats_weight_avg_init( UDF_INIT* initid, UDF_ARGS* args, char* message );
+  void stats_weight_avg_deinit( UDF_INIT* initid );
+  void stats_weight_avg_clear( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error );
+  void stats_weight_avg_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error );
+  void stats_weight_avg_add( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error );
+  double stats_weight_avg( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error );
 }
 
 struct weight_avg_data {
@@ -33,7 +37,7 @@ struct weight_avg_data {
   double weight_sum;
 };
 
-bool udf_weight_avg_init( UDF_INIT* initid, UDF_ARGS* args, char* message )
+bool stats_weight_avg_init( UDF_INIT* initid, UDF_ARGS* args, char* message )
 {
   if(args->arg_count != 2) {
     strcpy(message, "Wrong number of arguments: UDF_WEIGHT_AVG() requires two arguments");
@@ -63,12 +67,12 @@ bool udf_weight_avg_init( UDF_INIT* initid, UDF_ARGS* args, char* message )
   return 0;
 }
 
-void udf_weight_avg_deinit( UDF_INIT* initid )
+void stats_weight_avg_deinit( UDF_INIT* initid )
 {
   delete initid->ptr;
 }
 
-void udf_weight_avg_clear( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error )
+void stats_weight_avg_clear( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error )
 {
   weight_avg_data* buffer = (weight_avg_data*) initid->ptr;
 
@@ -79,13 +83,13 @@ void udf_weight_avg_clear( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char
   *error = 0;
 }
 
-void udf_weight_avg_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error )
+void stats_weight_avg_reset( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error )
 {
-  udf_weight_avg_clear( initid, args, is_null, error );
-  udf_weight_avg_add( initid, args, is_null, error );
+  stats_weight_avg_clear( initid, args, is_null, error );
+  stats_weight_avg_add( initid, args, is_null, error );
 }
 
-void udf_weight_avg_add( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error )
+void stats_weight_avg_add( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error )
 { 
   if(args->args[0] != NULL && args->args[1] != NULL) {
     weight_avg_data* buffer = (weight_avg_data*) initid->ptr;
@@ -96,7 +100,7 @@ void udf_weight_avg_add( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* 
   }
 }
 
-double udf_weight_avg( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error )
+double stats_weight_avg( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error )
 {
   weight_avg_data* buffer = (weight_avg_data*) initid->ptr;
 

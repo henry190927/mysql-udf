@@ -1,11 +1,21 @@
-/*
-  USAGE: 
-    args[0]: confidence probability (int or real)
-    args[1]: sample size (int)
-    args[2]: arithmetic mean (int or real)
-    args[3]: standard deviation (int or real)
-    
+/* stats_lower_conficence function
+ *
+ * Description:
+ *    Return the lower confidence x-value given data mean, size, sd and confidence level
+ *
+ * Usage:
+ *   LOWER_CONFIDENCE(probability, size, mean, sd)
+ * 
+ *   args[0]: confidence probability / level (int or real)
+ *   args[1]: sample size (int)
+ *   args[2]: arithmetic mean (int or real)
+ *   args[3]: standard deviation (int or real)
+ *
+ * Return:
+ *   lower confidence x-value : double (REAL)
+ *  
 */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -18,39 +28,39 @@ using namespace std;
 #define DECIMALS 2
 
 extern "C" {
-  bool udf_lower_confidence_init( UDF_INIT* initid, UDF_ARGS* args, char* message );
-  double udf_lower_confidence(UDF_INIT* init, UDF_ARGS* args, char* is_null, char* error );
+  bool stats_lower_confidence_init( UDF_INIT* initid, UDF_ARGS* args, char* message );
+  double stats_lower_confidence(UDF_INIT* init, UDF_ARGS* args, char* is_null, char* error );
 }
 
-bool udf_lower_confidence_init( UDF_INIT* initid, UDF_ARGS* args, char* message )
+bool stats_lower_confidence_init( UDF_INIT* initid, UDF_ARGS* args, char* message )
 {
   if(!args->arg_count != 4) {
-    strcpy(message, "Wrong number of arguments: UDF_LOWER_CONFIDENCE() requires four arguments");
+    strcpy(message, "Wrong number of arguments: STATS_LOWER_CONFIDENCE() requires four arguments");
     return 1;
   }
 
   if(args->arg_type[0] != INT_RESULT && args->arg_type[0] != REAL_RESULT) {
-    strcpy(message, "Wrong type of arguments: UDF_LOWER_CONFIDENCE() requires an integer or a real number as parameter 1");
+    strcpy(message, "Wrong type of arguments: STATS_LOWER_CONFIDENCE() requires an integer or a real number as parameter 1");
     return 1;
   }
 
   if(args->arg_type[1] != INT_RESULT) {
-    strcpy(message, "Wrong type of arguments: UDF_LOWER_CONFIDENCE() requires an interger as parameter 2");
+    strcpy(message, "Wrong type of arguments: STATS_LOWER_CONFIDENCE() requires an interger as parameter 2");
     return 1;
   }
 
   if(*((long*)args->args[1]) < 1) {
-    strcpy(message, "Wrong value of arguments: UDF_LOWER_CONFIDENCE() requires parameter 2 (sample size) at least 1");
+    strcpy(message, "Wrong value of arguments: STATS_LOWER_CONFIDENCE() requires parameter 2 (sample size) at least 1");
     return 1;
   }
 
   if(args->arg_type[2] != INT_RESULT && args->arg_type[2] != REAL_RESULT) {
-    strcpy(message, "Wrong type of arguments: UDF_LOWER_CONFIDENCE() requires an integer or a real number as parameter 3");
+    strcpy(message, "Wrong type of arguments: STATS_LOWER_CONFIDENCE() requires an integer or a real number as parameter 3");
     return 1;
   }
 
   if(args->arg_type[3] != INT_RESULT && args->arg_type[3] != REAL_RESULT) {
-    strcpy(message, "Wrong type of arguments: UDF_LOWER_CONFIDENCE() requires an integer or a real number as parameter 4");
+    strcpy(message, "Wrong type of arguments: STATS_LOWER_CONFIDENCE() requires an integer or a real number as parameter 4");
     return 1;
   }
 
@@ -103,7 +113,7 @@ static double invnormalp(double prob_low_end)
   }
 }
 
-double udf_lower_confidence(UDF_INIT* init, UDF_ARGS* args, char* is_null, char* error )
+double stats_lower_confidence(UDF_INIT* init, UDF_ARGS* args, char* is_null, char* error )
 {
   double conf_prob;
   double sample_size;

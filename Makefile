@@ -5,7 +5,7 @@ LDFLAGS = -shared
 INCL = $(shell mysql_config --include) $(shell gsl-config --cflags)
 LIBS = $(shell gsl-config --libs)
 
-TARGET_LIB = udf_stats.so
+TARGET_LIB = stats.so
 
 SRCS = $(shell echo *.cc)
 OBJS = $(SRCS:.cc=.o)
