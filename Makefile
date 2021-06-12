@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -fPIC $(INCL)
 LDFLAGS = -shared
 
-INCL = $(shell mysql_config --include) $(shell gsl-config --cflags)
+INCL = $(shell mysql_config --include) $(shell gsl-config --cflags) -I/usr/local/mysql/include
 LIBS = $(shell gsl-config --libs)
 
 TARGET_LIB = stats.so

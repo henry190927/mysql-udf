@@ -34,7 +34,7 @@ extern "C" {
 
 bool stats_lower_confidence_init( UDF_INIT* initid, UDF_ARGS* args, char* message )
 {
-  if(!args->arg_count != 4) {
+  if(args->arg_count != 4) {
     strcpy(message, "Wrong number of arguments: STATS_LOWER_CONFIDENCE() requires four arguments");
     return 1;
   }
