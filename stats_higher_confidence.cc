@@ -7,7 +7,7 @@
  *   HIGHER_CONFIDENCE(X, probability)
  * 
  *   args[0]: input data
- *   args[1]: confidence probability / level (int or real)
+ *   args[1]: confidence probability / level (real number in [0, 1])
  *
  * Return:
  *   higher confidence x-value : double (REAL)
@@ -26,6 +26,7 @@
 using namespace std;
 
 #define DECIMALS 6
+#define Z_MAX 6
 
 extern "C" {
   bool stats_higher_confidence_init( UDF_INIT* initid, UDF_ARGS* args, char* message );
@@ -51,8 +52,12 @@ bool stats_higher_confidence_init( UDF_INIT* initid, UDF_ARGS* args, char* messa
     args->arg_type[0] = REAL_RESULT;
   }
 
-  if(args->arg_type[1] != INT_RESULT && args->arg_type[0] != REAL_RESULT) {
-    strcpy(message, "Wrong type of arguments: STATS_HIGHER_CONFIDENCE() requires an integer or a real number as parameter 1");
+  if(args->arg_type[1] != REAL_RESULT) {
+    args->arg_type[1] = REAL_RESULT;
+  }
+
+  if(args->arg_type[1] != REAL_RESULT) {
+    strcpy(message, "Wrong type of arguments: STATS_HIGHER_CONFIDENCE() requires a real number as parameter 1");
     return 1;
   }
 
@@ -96,47 +101,64 @@ void stats_higher_confidence_add( UDF_INIT* initid, UDF_ARGS* args, char* is_nul
   }
 }
 
-static double invnormalp(double prob_high_end)
-{
-  const double p0 = -0.322232431088;
-  const double p1 = -1.0;
-  const double p2 = -0.342242088547;
-  const double p3 = -0.0204231210245;
-  const double p4 = -0.453642210148E-4;
-  const double q0 =  0.0993484626060;
-  const double q1 =  0.588581570495;
-  const double q2 =  0.531103462366;
-  const double q3 =  0.103537752850;
-  const double q4 =  0.38560700634E-2;
-  
-  double conf_out, y, xp;
+static double poz(double z) {
+  double y = 0.0;
+  double x = 0.0;
+  double w = 0.0;
 
-  if (prob_high_end < 0.5)  
-  {
-    conf_out = prob_high_end;
-  } else
-  {
-    conf_out = 1 - prob_high_end;
+  if (z == 0.0) {
+    x = 0.0;
+  } else {
+    y = 0.5 * abs(z);
+    if (y > (Z_MAX * 0.5)) {
+      x = 1.0;
+    } else if (y < 1.0) {
+      w = y * y;
+      x = ((((((((0.000124818987 * w
+                - 0.001075204047) * w + 0.005198775019) * w
+                - 0.019198292004) * w + 0.059054035642) * w
+                - 0.151968751364) * w + 0.319152932694) * w
+                - 0.531923007300) * w + 0.797884560593) * y * 2.0;
+    } else {
+      y -= 2.0;
+      x = (((((((((((((-0.000045255659 * y
+                + 0.000152529290) * y - 0.000019538132) * y
+                - 0.000676904986) * y + 0.001390604284) * y
+                - 0.000794620820) * y - 0.002034254874) * y
+                + 0.006549791214) * y - 0.010557625006) * y
+                + 0.011630447319) * y - 0.009279453341) * y
+                + 0.005353579108) * y - 0.002141268741) * y
+                + 0.000535310849) * y + 0.999936657524;
+    }
   }
-
-  if (conf_out < 1E-12)
-  {
-    xp = 99;
-  } else
-  {
-    y = sqrt(log(1/(conf_out*conf_out)));
-    xp = y + ((((y * p4 + p3) * y + p2) * y + p1) * y + p0) /
-             ((((y * q4 + q3) * y + q2) * y + q1) * y + q0);
-  }
-
-  if (prob_high_end < 0.5)  
-  {
-    return -xp;
-  } else
-  {
-    return  xp;
+  if (z > 0.0) {
+    return ((x + 1.0) * 0.5);
+  } else {
+    return ((1.0 - x) * 0.5);
   }
 }
+
+static double criticZ(double p) {
+  double Z_EPSILON = 0.000001;   /* Accuracy of z approximation */
+  double minz = -Z_MAX;
+  double maxz = Z_MAX;
+  double zval = 0.0;
+  double pval = 0.0;
+
+  if (p < 0.0) { p = 0.0; } 
+  if (p > 1.0) { p = 1.0; }
+
+  while ((maxz - minz) > Z_EPSILON) {
+    pval = poz(zval);
+    if (pval > p) {
+      maxz = zval;
+    } else {
+      minz = zval;
+    }
+    zval = (maxz + minz) * 0.5;
+  }
+  return zval;
+} 
 
 double stats_higher_confidence( UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error )
 {
@@ -144,7 +166,6 @@ double stats_higher_confidence( UDF_INIT* initid, UDF_ARGS* args, char* is_null,
   double sample_size;
   double mean;
   double std_dev;
-  double t_dist;
 
   stats_confidence_data* buffer = (stats_confidence_data*) initid->ptr;
 
@@ -159,11 +180,6 @@ double stats_higher_confidence( UDF_INIT* initid, UDF_ARGS* args, char* is_null,
   mean = gsl_stats_mean(values, 1, buffer->data.size());
   std_dev = gsl_stats_sd(values, 1, buffer->data.size());
 
-  double prob_high_end = conf_prob * 0.5 + 0.5;
-  t_dist = invnormalp(prob_high_end);
-  if(t_dist < 0) {
-    t_dist = -t_dist;
-  }
-
-  return 1.0 * mean + (std_dev * t_dist / sqrt(sample_size)); 
+  double z_score = criticZ(conf_prob);
+  return 1.0 * mean + (std_dev * z_score / sqrt(sample_size));
 }
