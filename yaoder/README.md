@@ -25,3 +25,6 @@ mysql -u root -p < drop.sql
 ```
 mysql -u root -p
 ```
+3. Dependencies
+
+user may have different mysql library dependencies, check [Makefile](/Makefile)
