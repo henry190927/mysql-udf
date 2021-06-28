@@ -27,4 +27,4 @@ mysql -u root -p
 ```
 3. Dependencies
 
-user may have different mysql library dependencies, check [Makefile](/Makefile)
+user may have different mysql library dependencies, check [Makefile](/yaoder/Makefile)
