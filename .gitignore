@@ -1,2 +1,5 @@
-.vscode/
-.DS_Store/
+*.o
+*.so
+
+# misc
+.DS_Store
