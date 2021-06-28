@@ -27,4 +27,10 @@ mysql -u root -p
 ```
 3. Dependencies
 
-user may have different mysql library dependencies, check [Makefile](/yaoder/Makefile)
+User may have different mysql library and plugins dependencies, check [Makefile](/yaoder/Makefile)
+
+My dependencies
+```
+INCL = -I/usr/local/mysql/include
+PLUGINS = /usr/local/mysql/lib/plugin
+```
