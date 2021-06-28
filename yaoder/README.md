@@ -31,6 +31,6 @@ User may have different mysql library and plugins dependencies, check [Makefile]
 
 My dependencies
 ```
-INCL = -I/usr/local/mysql/include
-PLUGINS = /usr/local/mysql/lib/plugin
+MY_INCL = -I/usr/local/mysql/include
+MY_PLUGINS = /usr/local/mysql/lib/plugin
 ```
