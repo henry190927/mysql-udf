@@ -4,7 +4,7 @@
  *    Return the lower confidence x-value given data mean, size, sd and confidence level
  *
  * Usage:
- *   LOWER_CONFIDENCE(X, probability)
+ *   STATS_LOWER_CONFIDENCE(X, probability)
  * 
  *   args[0]: input data
  *   args[1]: confidence probability / level (real number in [0, 1])

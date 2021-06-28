@@ -4,7 +4,7 @@
  *    Return the higher confidence x-value given data mean, size, sd and confidence level
  *
  * Usage:
- *   HIGHER_CONFIDENCE(X, probability)
+ *   STATS_HIGHER_CONFIDENCE(X, probability)
  * 
  *   args[0]: input data
  *   args[1]: confidence probability / level (real number in [0, 1])
